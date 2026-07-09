@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#EDE7DA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jacket Weather">
+<meta name="format-detection" content="telephone=no">
+<title>It's Jacket Weather</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 86'%3E%3Cpath d='M22 12 L28 6 H44 L50 12 L60 20 L53 29 L47 23 V78 H25 V23 L19 29 L12 20 Z' fill='%2347647F' stroke='%232A2724' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 86'%3E%3Crect width='72' height='86' fill='%23EDE7DA'/%3E%3Cpath d='M22 12 L28 6 H44 L50 12 L60 20 L53 29 L47 23 V78 H25 V23 L19 29 L12 20 Z' fill='%2347647F' stroke='%232A2724' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22It%27s%20Jacket%20Weather%22%2C%22short_name%22%3A%22Jacket%20Weather%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EDE7DA%22%2C%22theme_color%22%3A%22%23EDE7DA%22%2C%22start_url%22%3A%22.%22%7D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #EDE7DA;
+    --canvas-dim: #E2DAC8;
+    --navy: #2B3A55;
+    --navy-dim: #3D4F6E;
+    --rust: #B5482F;
+    --charcoal: #2A2724;
+    --linen: #D8CBAE;
+    --cotton: #C8B992;
+    --denim: #47647F;
+    --wool: #6E5849;
+    --leather: #4A2E22;
+    --rain-badge: #3F6E8C;
+    --line: rgba(42,39,36,0.14);
+    --side-pad: clamp(16px, 5vw, 24px);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--canvas);
+    color: var(--charcoal);
+    font-family: 'Inter', sans-serif;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(42,39,36,0.06) 1px, transparent 0);
+    background-size: 14px 14px;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: clamp(24px, 6vw, 36px)
+             max(var(--side-pad), env(safe-area-inset-right))
+             clamp(40px, 8vw, 56px)
+             max(var(--side-pad), env(safe-area-inset-left));
+  }
+
+  /* ---------- Header ---------- */
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(34px, 9vw, 54px);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    margin: 0 0 22px;
+    color: var(--navy);
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--rust);
+  }
+
+  /* ---------- Search bar (garment-tag styled) ---------- */
+  .tag-search {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid var(--charcoal);
+    border-radius: 3px;
+    background: #F7F4EC;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .tag-search::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: repeating-linear-gradient(
+      -45deg, var(--rust), var(--rust) 4px, transparent 4px, transparent 8px
+    );
+  }
+
+  .tag-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 15px 12px 15px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    color: var(--charcoal);
+    outline: none;
+  }
+
+  .tag-search input::placeholder { color: rgba(42,39,36,0.4); }
+
+  .tag-search button {
+    border: none;
+    border-left: 1.5px solid var(--charcoal);
+    background: var(--navy);
+    color: var(--canvas);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 20px;
+    min-height: 48px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+  }
+  .tag-search button:hover { background: var(--navy-dim); }
+
+  .locate-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  .locate-btn {
+    background: none;
+    border: none;
+    color: var(--navy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    touch-action: manipulation;
+    padding: 8px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  .status {
+    opacity: 0.55;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ---------- The Rack ---------- */
+  .rack-section {
+    margin-top: 44px;
+    position: relative;
+  }
+
+  .rail {
+    height: 3px;
+    background: var(--charcoal);
+    border-radius: 2px;
+    margin: 0 6px 0;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.25);
+  }
+
+  .rack {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    padding-top: 6px;
+  }
+
+  .garment-slot > svg:not(.wet-mark) {
+    width: clamp(34px, 12vw, 72px);
+    height: auto;
+  }
+
+  .hook {
+    display: flex;
+    justify-content: center;
+  }
+  .hook svg { display: block; }
+
+  .garment-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 2px 10px;
+    position: relative;
+    min-width: 0;
+    transition: transform 0.4s cubic-bezier(.2,.9,.25,1), opacity 0.4s ease, filter 0.4s ease;
+    opacity: 0.42;
+    filter: grayscale(0.75);
+  }
+
+  .garment-slot .glow {
+    position: absolute;
+    top: -14px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,184,67,0.55) 0%, rgba(232,184,67,0) 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .garment-slot svg { position: relative; z-index: 1; }
+
+  .garment-slot.active {
+    opacity: 1;
+    filter: grayscale(0);
+    transform: translateY(-10px) scale(1.08);
+  }
+
+  .garment-slot.active .glow { opacity: 1; }
+
+  .garment-slot .wet-mark {
+    position: absolute;
+    top: 0px;
+    right: 6px;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .garment-slot.active .wet-mark.show { opacity: 1; }
+
+  .garment-label {
+    margin-top: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(8.5px, 2.4vw, 10px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--charcoal);
+  }
+
+  /* ---------- Result tag/card ---------- */
+  .verdict {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 40px;
+  }
+  .verdict.show { display: flex; }
+
+  .verdict-stamp {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--rust);
+    border: 2.5px solid var(--rust);
+    border-radius: 4px;
+    padding: 4px 14px 5px;
+    transform: rotate(-2deg);
+    white-space: nowrap;
+  }
+
+  .verdict-line {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--charcoal) 0 5px, transparent 5px 10px);
+    opacity: 0.35;
+  }
+
+  .result-tag {
+    margin-top: 46px;
+    background: #F7F4EC;
+    border: 1.5px solid var(--charcoal);
+    border-radius: 6px;
+    padding: clamp(18px, 5vw, 26px) clamp(16px, 5vw, 26px) 22px;
+    position: relative;
+    display: none;
+  }
+
+  .result-tag.show { display: block; }
+
+  .result-tag::after {
+    content: '';
+    position: absolute;
+    top: -9px;
+    left: 28px;
+    width: 16px;
+    height: 16px;
+    background: var(--canvas);
+    border: 1.5px solid var(--charcoal);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 3px #F7F4EC;
+  }
+
+  .place-line {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin: 0 0 4px;
+  }
+
+  .temp-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-bottom: 4px;
+  }
+
+  .temp-num {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 40px;
+    letter-spacing: -0.02em;
+  }
+
+  .cond-word {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  .jacket-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin: 14px 0 6px;
+  }
+
+  .jacket-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 26px;
+    color: var(--rust);
+    margin: 0;
+  }
+
+  .wet-pill {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--rain-badge);
+    border: 1.3px solid var(--rain-badge);
+    border-radius: 20px;
+    padding: 3px 9px 3px 7px;
+  }
+  .wet-pill.show { display: inline-flex; }
+
+  .jacket-note {
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin: 0 0 14px;
+    max-width: 44ch;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    opacity: 0.65;
+  }
+
+  .error-tag {
+    margin-top: 46px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--rust);
+    display: none;
+  }
+  .error-tag.show { display: block; }
+
+  /* ---------- 5-day rack ---------- */
+  .week-section {
+    margin-top: 40px;
+    display: none;
+  }
+  .week-section.show { display: block; }
+
+  .week-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin: 0 0 12px;
+    border-top: 1px dashed var(--line);
+    padding-top: 20px;
+  }
+
+  .week-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .day-card {
+    background: #F7F4EC;
+    border: 1.5px solid var(--charcoal);
+    border-radius: 5px;
+    padding: 10px 4px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .day-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 6px;
+  }
+
+  .day-card svg { width: 34px; height: 41px; }
+
+  .day-jacket {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--rust);
+    margin: 6px 0 4px;
+    line-height: 1.15;
+  }
+
+  .day-temps {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+  .day-temps .lo { opacity: 0.5; }
+
+  @media (max-width: 480px) {
+    .week-strip { gap: 3px; }
+    .day-card { padding: 8px 2px 10px; }
+    .day-card svg { width: 24px; height: 29px; }
+    .day-jacket { font-size: 10px; }
+    .day-name { font-size: 9px; }
+  }
+
+  @media (max-width: 360px) {
+    .week-strip {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(64px, 1fr);
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .day-card { scroll-snap-align: start; }
+  }
+
+  footer {
+    margin-top: 50px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    opacity: 0.4;
+    letter-spacing: 0.03em;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .garment-slot { transition: none; }
+  }
+
+  @media (max-height: 480px) and (orientation: landscape) {
+    .wrap { padding-top: 18px; padding-bottom: 24px; }
+    h1 { font-size: clamp(28px, 6vw, 40px); margin-bottom: 14px; }
+    .rack-section { margin-top: 24px; }
+    .verdict, .result-tag { margin-top: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Is it <em>jacket</em><br>weather?</h1>
+
+  <form class="tag-search" id="searchForm">
+    <input type="text" id="cityInput" placeholder="Enter a city…" autocomplete="off">
+    <button type="submit">Check</button>
+  </form>
+  <div class="locate-row">
+    <button type="button" class="locate-btn" id="locateBtn">Use my location instead</button>
+    <span class="status" id="statusLine">&nbsp;</span>
+  </div>
+
+  <div class="rack-section">
+    <div class="rail"></div>
+    <div class="rack" id="rack">
+      <!-- Linen -->
+      <div class="garment-slot" data-jacket="linen">
+        <div class="glow"></div>
+        <div class="hook"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0 V5" stroke="#2A2724" stroke-width="1.5"/><circle cx="5" cy="8" r="3" fill="none" stroke="#2A2724" stroke-width="1.5"/></svg></div>
+        <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+          <path d="M24 12 L29 6 H43 L48 12 L58 19 L52 27 L46 22 L44 74 H28 L26 22 L20 27 L14 19 Z" fill="#D8CBAE" stroke="#2A2724" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M29 6 L36 20 L43 6" fill="none" stroke="#2A2724" stroke-width="1.6"/>
+          <path d="M26 22 L30 74 M46 22 L42 74" stroke="#2A2724" stroke-width="1.3" opacity="0.6"/>
+          <circle cx="36" cy="34" r="1.4" fill="#2A2724"/>
+        </svg>
+        <svg class="wet-mark" width="16" height="20" viewBox="0 0 16 20"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>
+        <div class="garment-label">Linen</div>
+      </div>
+      <!-- Cotton -->
+      <div class="garment-slot" data-jacket="cotton">
+        <div class="glow"></div>
+        <div class="hook"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0 V5" stroke="#2A2724" stroke-width="1.5"/><circle cx="5" cy="8" r="3" fill="none" stroke="#2A2724" stroke-width="1.5"/></svg></div>
+        <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+          <path d="M23 12 L29 6 H43 L49 12 L59 19 L53 28 L47 22 V74 H25 V22 L19 28 L13 19 Z" fill="#C8B992" stroke="#2A2724" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M29 6 L36 18 L43 6" fill="none" stroke="#2A2724" stroke-width="1.6"/>
+          <path d="M36 18 V74" stroke="#2A2724" stroke-width="1.5"/>
+          <rect x="27" y="44" width="9" height="8" rx="1" fill="none" stroke="#2A2724" stroke-width="1.3"/>
+          <circle cx="36" cy="26" r="1.4" fill="#2A2724"/>
+        </svg>
+        <svg class="wet-mark" width="16" height="20" viewBox="0 0 16 20"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>
+        <div class="garment-label">Cotton</div>
+      </div>
+      <!-- Denim -->
+      <div class="garment-slot" data-jacket="denim">
+        <div class="glow"></div>
+        <div class="hook"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0 V5" stroke="#2A2724" stroke-width="1.5"/><circle cx="5" cy="8" r="3" fill="none" stroke="#2A2724" stroke-width="1.5"/></svg></div>
+        <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+          <path d="M22 12 L28 6 H44 L50 12 L60 20 L53 29 L47 23 V78 H25 V23 L19 29 L12 20 Z" fill="#47647F" stroke="#2A2724" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 6 L36 16 L44 6" fill="none" stroke="#2A2724" stroke-width="1.6"/>
+          <path d="M36 16 V78" stroke="#2A2724" stroke-width="1.5"/>
+          <rect x="27" y="42" width="10" height="9" rx="1" fill="none" stroke="#2A2724" stroke-width="1.4"/>
+          <rect x="39" y="42" width="10" height="9" rx="1" fill="none" stroke="#2A2724" stroke-width="1.4"/>
+          <circle cx="36" cy="30" r="1.5" fill="#2A2724"/>
+          <circle cx="36" cy="37" r="1.5" fill="#2A2724"/>
+        </svg>
+        <svg class="wet-mark" width="16" height="20" viewBox="0 0 16 20"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>
+        <div class="garment-label">Denim</div>
+      </div>
+      <!-- Wool -->
+      <div class="garment-slot" data-jacket="wool">
+        <div class="glow"></div>
+        <div class="hook"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0 V5" stroke="#2A2724" stroke-width="1.5"/><circle cx="5" cy="8" r="3" fill="none" stroke="#2A2724" stroke-width="1.5"/></svg></div>
+        <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+          <path d="M21 13 C21 6 51 6 51 13 L61 21 L55 31 L49 25 V78 H23 V25 L17 31 L11 21 Z" fill="#6E5849" stroke="#2A2724" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M21 13 C25 19 47 19 51 13" fill="none" stroke="#2A2724" stroke-width="1.5"/>
+          <path d="M18 36 L54 40 M18 48 L54 52 M18 60 L54 64" stroke="#2A2724" stroke-width="1.1" opacity="0.4"/>
+          <path d="M36 25 V78" stroke="#2A2724" stroke-width="1.5"/>
+        </svg>
+        <svg class="wet-mark" width="16" height="20" viewBox="0 0 16 20"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>
+        <div class="garment-label">Wool</div>
+      </div>
+      <!-- Leather -->
+      <div class="garment-slot" data-jacket="leather">
+        <div class="glow"></div>
+        <div class="hook"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0 V5" stroke="#2A2724" stroke-width="1.5"/><circle cx="5" cy="8" r="3" fill="none" stroke="#2A2724" stroke-width="1.5"/></svg></div>
+        <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+          <path d="M22 14 C22 6 50 6 50 14 L60 22 L54 32 L48 26 V78 H36 L34 50 L32 78 H24 V26 L18 32 L12 22 Z" fill="#4A2E22" stroke="#2A2724" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M22 14 C26 20 46 20 50 14" fill="none" stroke="#2A2724" stroke-width="1.5"/>
+          <path d="M36 26 L34 50 M36 26 L38 50" stroke="#2A2724" stroke-width="1.3" opacity="0.55"/>
+          <circle cx="30" cy="46" r="1.3" fill="#2A2724"/>
+          <circle cx="30" cy="60" r="1.3" fill="#2A2724"/>
+        </svg>
+        <svg class="wet-mark" width="16" height="20" viewBox="0 0 16 20"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>
+        <div class="garment-label">Leather</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict">
+    <span class="verdict-stamp">It's jacket weather.</span>
+    <span class="verdict-line"></span>
+  </div>
+
+  <div class="result-tag" id="resultTag">
+    <p class="place-line" id="placeLine">—</p>
+    <div class="temp-row">
+      <span class="temp-num" id="tempNum">—</span>
+      <span class="cond-word" id="condWord">—</span>
+    </div>
+    <div class="jacket-name-row">
+      <p class="jacket-name" id="jacketName">—</p>
+      <span class="wet-pill" id="wetPill">☔ Wet out</span>
+    </div>
+    <p class="jacket-note" id="jacketNote">—</p>
+    <div class="meta-row">
+      <span id="metaFeels">—</span>
+      <span id="metaWind">—</span>
+      <span id="metaRain">—</span>
+    </div>
+  </div>
+
+  <div class="error-tag" id="errorTag"></div>
+
+  <div class="week-section" id="weekSection">
+    <p class="week-title">This week's rack</p>
+    <div class="week-strip" id="weekStrip"></div>
+  </div>
+
+  <footer>Forecast data via Open&#8209;Meteo. Jacket judgment via us.</footer>
+</div>
+
+<script>
+const els = {
+  form: document.getElementById('searchForm'),
+  input: document.getElementById('cityInput'),
+  locateBtn: document.getElementById('locateBtn'),
+  status: document.getElementById('statusLine'),
+  rack: document.getElementById('rack'),
+  resultTag: document.getElementById('resultTag'),
+  errorTag: document.getElementById('errorTag'),
+  placeLine: document.getElementById('placeLine'),
+  tempNum: document.getElementById('tempNum'),
+  condWord: document.getElementById('condWord'),
+  jacketName: document.getElementById('jacketName'),
+  jacketNote: document.getElementById('jacketNote'),
+  wetPill: document.getElementById('wetPill'),
+  metaFeels: document.getElementById('metaFeels'),
+  metaWind: document.getElementById('metaWind'),
+  metaRain: document.getElementById('metaRain'),
+  weekSection: document.getElementById('weekSection'),
+  weekStrip: document.getElementById('weekStrip'),
+  verdict: document.getElementById('verdict'),
+};
+
+const WEATHER_WORDS = {
+  0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+  45: 'Foggy', 48: 'Foggy',
+  51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+  56: 'Freezing drizzle', 57: 'Freezing drizzle',
+  61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+  66: 'Freezing rain', 67: 'Freezing rain',
+  71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains',
+  80: 'Rain showers', 81: 'Rain showers', 82: 'Heavy showers',
+  85: 'Snow showers', 86: 'Snow showers',
+  95: 'Thunderstorms', 96: 'Thunderstorms', 99: 'Thunderstorms',
+};
+
+const SNOW_CODES = new Set([71,73,75,77,85,86]);
+const RAIN_CODES = new Set([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99]);
+
+const JACKETS = {
+  linen: {
+    name: 'Linen',
+    notes: [
+      "Basically wearing a napkin, and thriving.",
+      "So light you'll forget you own it — until someone compliments it.",
+      "Wrinkles are a feature. Nobody's fixing that."
+    ],
+    wetNotes: [
+      "Linen in the rain is just a wet napkin. Bring a shell.",
+      "One raindrop and this becomes tissue paper. You've been warned."
+    ]
+  },
+  cotton: {
+    name: 'Cotton',
+    notes: [
+      "The jacket equivalent of a reliable friend who never asks for much.",
+      "Overshirt energy. Looks intentional, requires zero effort.",
+      "Breathable, unbothered, slightly wrinkled by 2pm."
+    ],
+    wetNotes: [
+      "Regular cotton in rain is a sponge with sleeves. Wax it or regret it.",
+      "Fine in a drizzle. In a downpour it just gives up."
+    ]
+  },
+  denim: {
+    name: 'Denim',
+    notes: [
+      "Indestructible, slightly stiff, smells like a campfire by year three.",
+      "The jacket that ages better than you do.",
+      "Sturdy enough to survive wind, weather, and your life choices."
+    ],
+    wetNotes: [
+      "Wet denim weighs approximately one metric ton. Hood recommended.",
+      "Handles a shower fine. A soaking turns it into cardboard."
+    ]
+  },
+  wool: {
+    name: 'Wool',
+    notes: [
+      "Heavier, warmer, and somehow still smug about it.",
+      "This is the jacket that peer-pressures you into looking put-together.",
+      "Textured, cozy, mildly itchy — character building."
+    ],
+    wetNotes: [
+      "Wool shrugs off a light rain like it's not even trying.",
+      "Damp wool smells like a wet dog. Iconic, but plan accordingly."
+    ]
+  },
+  leather: {
+    name: 'Leather',
+    notes: [
+      "The final boss of jackets. Nothing beats it, nothing follows it.",
+      "Zero layers needed underneath — this thing means business.",
+      "You will look 40% cooler and 0% warmer than expected."
+    ],
+    wetNotes: [
+      "Leather in light rain: unbothered. In a monsoon: still unbothered, but see a cobbler after.",
+      "A little rain gives it character. A lot of rain gives it a chiropractor bill."
+    ]
+  }
+};
+
+const MINI_SVGS = {
+  linen: `<svg viewBox="0 0 72 86" fill="none"><path d="M24 12 L29 6 H43 L48 12 L58 19 L52 27 L46 22 L44 74 H28 L26 22 L20 27 L14 19 Z" fill="#D8CBAE" stroke="#2A2724" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  cotton: `<svg viewBox="0 0 72 86" fill="none"><path d="M23 12 L29 6 H43 L49 12 L59 19 L53 28 L47 22 V74 H25 V22 L19 28 L13 19 Z" fill="#C8B992" stroke="#2A2724" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  denim: `<svg viewBox="0 0 72 86" fill="none"><path d="M22 12 L28 6 H44 L50 12 L60 20 L53 29 L47 23 V78 H25 V23 L19 29 L12 20 Z" fill="#47647F" stroke="#2A2724" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  wool: `<svg viewBox="0 0 72 86" fill="none"><path d="M21 13 C21 6 51 6 51 13 L61 21 L55 31 L49 25 V78 H23 V25 L17 31 L11 21 Z" fill="#6E5849" stroke="#2A2724" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  leather: `<svg viewBox="0 0 72 86" fill="none"><path d="M22 14 C22 6 50 6 50 14 L60 22 L54 32 L48 26 V78 H36 L34 50 L32 78 H24 V26 L18 32 L12 22 Z" fill="#4A2E22" stroke="#2A2724" stroke-width="3" stroke-linejoin="round"/></svg>`,
+};
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function decideJacket(apparentF, weatherCode, precipProbMax) {
+  const snowy = SNOW_CODES.has(weatherCode);
+  const wet = snowy || RAIN_CODES.has(weatherCode) || (precipProbMax != null && precipProbMax >= 40);
+
+  let key;
+  if (snowy || apparentF < 34) key = 'leather';
+  else if (apparentF < 50) key = 'wool';
+  else if (apparentF < 64) key = 'denim';
+  else if (apparentF < 78) key = 'cotton';
+  else key = 'linen';
+
+  return { key, wet };
+}
+
+function setActiveGarment(key, wet) {
+  document.querySelectorAll('.garment-slot').forEach(el => {
+    const isActive = el.dataset.jacket === key;
+    el.classList.toggle('active', isActive);
+    const mark = el.querySelector('.wet-mark');
+    if (mark) mark.classList.toggle('show', isActive && !!wet);
+  });
+}
+
+function setStatus(msg) { els.status.textContent = msg; }
+
+async function geocodeCity(name) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=en&format=json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('geocode failed');
+  const data = await res.json();
+  if (!data.results || !data.results.length) throw new Error('Couldn\'t find "' + name + '" anywhere. Even satellites have limits — try a bigger nearby city.');
+  const r = data.results[0];
+  return {
+    lat: r.latitude, lon: r.longitude,
+    label: [r.name, r.admin1, r.country_code].filter(Boolean).join(', ')
+  };
+}
+
+async function reverseGeocode(lat, lon) {
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const city = data.city || data.locality || data.principalSubdivision;
+    return [city, data.principalSubdivision, data.countryCode].filter(Boolean).join(', ');
+  } catch (e) {
+    return 'Your location';
+  }
+}
+
+async function fetchForecast(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m` +
+    `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min,apparent_temperature_max,weather_code` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=5`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('forecast failed');
+  return res.json();
+}
+
+function renderResult(place, forecast) {
+  const c = forecast.current;
+  const precipProbMax = forecast.daily && forecast.daily.precipitation_probability_max
+    ? forecast.daily.precipitation_probability_max[0] : null;
+
+  const { key: jacketKey, wet } = decideJacket(c.apparent_temperature, c.weather_code, precipProbMax);
+  const jacket = JACKETS[jacketKey];
+
+  setActiveGarment(jacketKey, wet);
+
+  els.placeLine.textContent = place;
+  els.tempNum.textContent = Math.round(c.temperature_2m) + '°';
+  els.condWord.textContent = WEATHER_WORDS[c.weather_code] || 'Conditions unclear';
+  els.jacketName.textContent = jacket.name;
+  els.jacketNote.textContent = pick(wet ? jacket.wetNotes : jacket.notes);
+  els.wetPill.classList.toggle('show', wet);
+  els.metaFeels.textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '°';
+  els.metaWind.textContent = 'Wind ' + Math.round(c.wind_speed_10m) + ' mph';
+  els.metaRain.textContent = precipProbMax != null ? 'Rain chance ' + Math.round(precipProbMax) + '%' : '';
+
+  els.resultTag.classList.add('show');
+  els.errorTag.classList.remove('show');
+  els.verdict.classList.add('show');
+
+  renderWeek(forecast.daily);
+}
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function renderWeek(daily) {
+  if (!daily || !daily.time) {
+    els.weekSection.classList.remove('show');
+    return;
+  }
+  const cards = daily.time.map((dateStr, i) => {
+    const hiF = Math.round(daily.temperature_2m_max[i]);
+    const loF = Math.round(daily.temperature_2m_min[i]);
+    const feelsHi = daily.apparent_temperature_max ? daily.apparent_temperature_max[i] : hiF;
+    const code = daily.weather_code[i];
+    const rainProb = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null;
+    const { key: jacketKey, wet } = decideJacket(feelsHi, code, rainProb);
+    const label = i === 0 ? 'Today' : DAY_NAMES[new Date(dateStr + 'T12:00:00').getDay()];
+    const drop = wet ? `<svg width="12" height="15" viewBox="0 0 16 20" style="position:absolute;top:4px;right:6px"><path d="M8 1 C8 1 1 11 1 15 A7 7 0 0 0 15 15 C15 11 8 1 8 1Z" fill="#3F6E8C" stroke="#2A2724" stroke-width="1.2"/></svg>` : '';
+    return `
+      <div class="day-card" style="position:relative">
+        ${drop}
+        <div class="day-name">${label}</div>
+        ${MINI_SVGS[jacketKey]}
+        <div class="day-jacket">${JACKETS[jacketKey].name}</div>
+        <div class="day-temps">${hiF}&deg; <span class="lo">${loF}&deg;</span></div>
+      </div>`;
+  }).join('');
+  els.weekStrip.innerHTML = cards;
+  els.weekSection.classList.add('show');
+}
+
+function showError(msg) {
+  els.errorTag.textContent = msg;
+  els.errorTag.classList.add('show');
+  els.resultTag.classList.remove('show');
+  els.weekSection.classList.remove('show');
+  els.verdict.classList.remove('show');
+  setActiveGarment(null, false);
+}
+
+async function runForCity(name) {
+  setStatus('Checking…');
+  try {
+    const place = await geocodeCity(name);
+    const forecast = await fetchForecast(place.lat, place.lon);
+    renderResult(place.label, forecast);
+    setStatus('');
+  } catch (e) {
+    showError(e.message || 'The forecast is being uncooperative. Try again in a moment.');
+    setStatus('');
+  }
+}
+
+async function runForCoords(lat, lon) {
+  setStatus('Checking…');
+  try {
+    const [label, forecast] = await Promise.all([
+      reverseGeocode(lat, lon),
+      fetchForecast(lat, lon)
+    ]);
+    renderResult(label, forecast);
+    setStatus('');
+  } catch (e) {
+    showError('Could not get a forecast for your location. Even we don\'t know where you are.');
+    setStatus('');
+  }
+}
+
+els.form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const val = els.input.value.trim();
+  if (!val) return;
+  runForCity(val);
+});
+
+els.locateBtn.addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    setStatus('Geolocation not supported here.');
+    return;
+  }
+  setStatus('Locating…');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => runForCoords(pos.coords.latitude, pos.coords.longitude),
+    () => {
+      setStatus('');
+      showError('Location access denied. Fair enough — try typing a city instead.');
+    },
+    { timeout: 8000 }
+  );
+});
+
+// Default on load: try a gentle city so the app isn't empty.
+els.input.value = 'New York';
+runForCity('New York');
+</script>
+</body>
+</html>
